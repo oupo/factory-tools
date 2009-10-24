@@ -24,7 +24,7 @@ Dir["log/*.txt"].sort.each do |filename|
   seed = step_seed(first_seed, c2)
   entries2, n2 = get_factory_entries(1, seed, 3, my_entries)
 
-  ok = entries1 == entries2 and c1 + n1 == c2 + n2
+  ok = entries1 == entries2 && c1 + n1 == c2 + n2
   puts "#{File.basename(filename)}: #{ok}"
   count[ok] += 1
 end
