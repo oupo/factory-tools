@@ -1,26 +1,11 @@
 #!ruby -Ku
 
 require 'set'
-require 'pp'
 require './roma2reg.rb'
 require './win32-encoding.rb'
 
 def main
-  initialize_pokemon_entries()
-  initialize_factory_entries()
-  initialize_shuu_entry_range()
-  initialize_trainer_names()
-  initialize_entei()
-  @natures = %w(がんばりや さみしがり ゆうかん いじっぱり やんちゃ ずぶとい すなお のんき わんぱく のうてんき おくびょう せっかち まじめ ようき むじゃき ひかえめ おっとり れいせい てれや うっかりや おだやか おとなしい なまいき しんちょう きまぐれ)
-  
-  if ARGV.delete("--log")
-    main_log_mode()
-  else
-    main_normal()
-  end
-end
-
-def main_normal
+  factory_initialize()
   shuu = 1
 
   print "初期seed: "
@@ -32,97 +17,42 @@ def main_normal
   seed = step_seed(first_seed)
   consumption = 1
   
-  raw_entries, start_consumption, end_consumption, n = find_entries_and_show(shuu, first_seed, consumption, entries, [])
+  h = find_entries_and_select_candidate(shuu, [first_seed], consumption, entries, [])
+  unless h
+    puts "6匹の組み合わせは見つかりませんでした"
+    return
+  end
+  raw_entries = h[:entries]
+  start_consumption, end_consumption = step_entries(h)
+  n = show_entries(shuu, h, consumption, entries, [])
   seed = step_seed(seed, n)
   consumption += n
+  
+  seed = step_seed(seed, 2)
+  consumption += 2
   
   puts
   print "相手の3匹: "
   enemy_entries = input_pokemon_names(3, shuu, raw_entries)
-  raw_enemy_entries, enemy_start_consumption, enemy_end_consumption, n = find_entries_and_show(shuu, first_seed, consumption, enemy_entries, entries)
+  h = get_factory_entries_info(shuu, first_seed, seed, consumption, 3, entries)
+  unless h[:entries].all? {|i| enemy_entries.include?(i) }
+    puts "3匹の組み合わせが一致しません"
+    return true
+  end
+  raw_enemy_entries = h[:entries]
+  enemy_start_consumption, enemy_end_consumption = step_entries(h)
+  n = show_entries(shuu, h, consumption, enemy_entries, entries)
   seed = step_seed(seed, n)
   consumption += n
 end
 
-def main_log_mode
-  puts "log mode"
-  
-  shuu = 1
-  date = "2009/10/21"
-  second = 24
-  times = 0.upto(23).map {|h| (0..50).step(10).map {|m| "%.2d:%.2d" % [h, m] } }.flatten
-  times = times[times.index('16:50')..-1]
-  
-  roads_on_save = input_roads("セーブ前の徘徊の位置: ")
-  times.each do |time|
-    puts "時刻: #{time}"
-    datetime = "#{date} #{time}:#{second}"
-    seed_high = date_to_seed_high(datetime)
-    roads = input_roads("ロード直後の徘徊の位置: ")
-    redo if main_log_mode_cycle(shuu, datetime, seed_high, roads, roads_on_save)
-    roads_on_save = roads
-  end
-end
-
-def main_log_mode_cycle(shuu, date, seed_high, roads, roads_on_save)
-  # 初期seed候補のリスト [[seed, 徘徊での乱数消費量], ...]
-  seed_pick = search_seeds_by_roads(seed_high, roads, roads_on_save)
-  if seed_pick.empty?
-    puts "当てはまる初期seedが見つかりません"
-    return true
-  end
-  
-  print "相手の3匹: "
-  enemy_entries = input_pokemon_names(3, shuu, [])
-  
-  print "最初の6匹: "
-  entries = input_pokemon_names(6, shuu, enemy_entries)
-  
-  seeds = seed_pick.map{|(s,c)| s}
-  h = find_entries_and_select_candidate(shuu, seeds, 0, entries, [])
-  return true unless h
-  raw_entries = h[:entries]
-  first_seed = h[:first_seed]
-  entei_consumption = seed_pick.find {|(s,c)| s == first_seed}[1] # 徘徊での乱数消費量
-  
-  puts "初期seed: %#.8x" % first_seed
-  seed = first_seed
-  consumption = 0
-  
-  start_consumption, end_consumption = step_entries(h, consumption)
-  
-  h = find_entries_and_select_candidate(shuu, [first_seed], end_consumption + 1, enemy_entries, entries)
-  return true unless h
-  raw_enemy_entries = h[:entries]
-  
-  enemy_start_consumption, enemy_end_consumption = step_entries(h, end_consumption + 1)
-  consumption = end_consumption + 1
-  seed = step_seed(first_seed, consumption)
-  
-  begin
-    print "トレーナー: "
-    enemy_trainer_name = get_trainer_name(gets.chomp)
-  end until enemy_trainer_name
-  
-  filename = date_to_filename(date)
-  open(filename, "wb") do |f|
-    f.puts date
-    f.puts "target: %#.4xXXXX" % seed_high
-    f.puts "セーブ前の徘徊の位置: " + roads_on_save.join(",")
-    f.puts "%#.8x: %s (%d)" % [first_seed, roads.join(","), entei_consumption]
-    f.puts
-    f.puts entries.map(&:name).join(",")
-    f.puts "消費された乱数の範囲: %d-%d" % [start_consumption, end_consumption]
-    f.puts "シャッフル: "+raw_entries.map {|e| entries.index(e) + 1 }.join(",")
-    f.puts
-    f.puts enemy_entries.map(&:name).join(",")
-    f.puts "消費された乱数の範囲: %d-%d" % [enemy_start_consumption, enemy_end_consumption]
-    f.puts "シャッフル: "+raw_enemy_entries.map {|e| enemy_entries.index(e) + 1 }.join(",")
-    f.puts
-    f.puts "トレーナー: #{enemy_trainer_name}"
-  end
-  puts "#{filename} に保存しました"
-  false
+def factory_initialize
+  initialize_pokemon_entries()
+  initialize_factory_entries()
+  initialize_shuu_entry_range()
+  initialize_trainer_names()
+  initialize_entei()
+  @natures = %w(がんばりや さみしがり ゆうかん いじっぱり やんちゃ ずぶとい すなお のんき わんぱく のうてんき おくびょう せっかち まじめ ようき むじゃき ひかえめ おっとり れいせい てれや うっかりや おだやか おとなしい なまいき しんちょう きまぐれ)
 end
 
 def input_roads(caption)
@@ -187,43 +117,39 @@ def input_pokemon_name(name, shuu, entries)
   entry
 end
 
-def find_entries_and_show(shuu, first_seed, consumption, entries, visited_entries)
-  c = consumption
-  h = find_entries_and_select_candidate(shuu, [first_seed], consumption, entries, visited_entries)
+def show_entries(shuu, h, consumption, entries, visited_entries)
   raw_entries = h[:entries]
-  seed = step_seed(h[:seed], h[:pos])
-  c += h[:pos]
-  puts
+  seed, c = h[:seed], h[:consumption]
   start_consumption = c
+  puts
   show_factory_entries_by_seed(shuu, entries.size, seed, c, visited_entries)
-  seed = step_seed(seed, h[:consumption])
-  c += h[:consumption]
+  seed = step_seed(seed, h[:steps])
+  c += h[:steps]
   
   puts
   n = show_entries_pid(raw_entries, seed, c)
   seed = step_seed(seed, n)
   c += n
-  end_consumption = c
+  end_consumption = c - 1
   
   puts
   puts "シャッフル後: " + raw_entries.map {|e| entries.index(e) + 1 }.join(",")
-  puts "#{start_consumption}-#{end_consumption-1}"
+  puts "#{start_consumption}-#{end_consumption}"
   
-  return raw_entries, start_consumption, end_consumption, c - consumption
+  return c - consumption
 end
 
 def find_entries_and_select_candidate(shuu, seeds, consumption, entries, visited_entries)
   candidate = find_factory_entries_candidate(shuu, seeds, consumption, entries, visited_entries)
   if candidate.empty?
-    puts "#{entries.size}匹の組み合わせは見つかりませんでした"
     return nil
   end
   if candidate.size > 1
     puts "#{entries.size}匹の組み合わせは#{candidate.size}通りの候補があります"
     candidate.each_with_index do |h, i|
       es = h[:entries]
-      pids = get_entries_pid(es, step_seed(h[:seed], h[:pos]+h[:consumption]))
-      puts "%d: %#.8x +%d..%d" % [i+1, h[:first_seed], consumption + h[:pos], consumption + h[:pos] + h[:consumption] - 1]
+      pids = get_entries_pid(es, step_seed(h[:seed], h[:steps]))
+      puts "%d: %#.8x +%d..%d" % [i+1, h[:first_seed], h[:consumption], h[:consumption] + h[:steps] - 1]
       puts es.zip(pids).sort_by {|(e,p)| entries.index(e) }.map {|(e,p)| "%s:%.5d" % [e.name, p[:parent_id]] }.join(", ")
     end
     begin
@@ -236,13 +162,13 @@ def find_entries_and_select_candidate(shuu, seeds, consumption, entries, visited
   end
 end
 
-def step_entries(h, consumption)
-  seed = step_seed(h[:seed], h[:pos])
-  consumption += h[:pos]
+def step_entries(h)
+  consumption = h[:consumption]
+  seed = h[:seed]
   
   start_consumption = consumption
-  seed = step_seed(seed, h[:consumption])
-  consumption += h[:consumption]
+  seed = step_seed(seed, h[:steps])
+  consumption += h[:steps]
   
   n = step_entries_pid(h[:entries], seed)
   seed = step_seed(seed, n)
@@ -254,20 +180,24 @@ end
 def find_factory_entries_candidate(shuu, seeds, consumption, target_entries, visited_entries)
   result = []
   seeds.each do |first_seed|
-    c = 0
-    seed = s = step_seed(first_seed, consumption)
+    c = consumption
+    seed = step_seed(first_seed, consumption)
     100.times do
-      entries, n = get_factory_entries(shuu, s, target_entries.size, visited_entries)
-      if entries.all? {|i| target_entries.include?(i) }
-        if result.none? {|e| entries == e[:entries] and e[:pos] + e[:consumption] == c + n }
-          result << {:first_seed => first_seed, :seed => seed, :entries => entries, :pos => c, :consumption => n}
-        end
+      info = get_factory_entries_info(shuu, first_seed, seed, c,
+                                      target_entries.size, visited_entries)
+      if info[:entries].all? {|i| target_entries.include?(i) }
+        result << info
       end
-      s = step_seed(s)
+      seed = step_seed(seed)
       c += 1
     end
   end
   result
+end
+
+def get_factory_entries_info(shuu, first_seed, seed, consumption, count, visited_entries)
+  entries, n = get_factory_entries(shuu, seed, count, visited_entries)
+  {:first_seed => first_seed, :seed => seed, :entries => entries, :consumption => consumption, :steps => n}
 end
 
 def get_factory_entries(shuu, seed, count, visited_entries)
@@ -501,16 +431,6 @@ def get_factory_entry_by_regexp(shuu, re)
   nil
 end
 
-def date_to_filename(date)
-  d = date.sub(/\A(20\d{2})\/(\d{1,2})\/(\d{1,2}).*/) { "#{$1}#{$2}#{$3}" }
-  i = 1
-  begin
-    s = "log/%s-%.2d.txt" % [d, i]
-    i += 1
-  end while File.exist?(s)
-  s
-end
-
 def initialize_trainer_names
   open('trainer.txt', 'rb') do |f|
     @trainer_names = f.lines.map(&:chomp)
@@ -618,4 +538,6 @@ class PokemonEntry
   end
 end
 
-main()
+if $0 == __FILE__
+  main()
+end
