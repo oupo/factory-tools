@@ -1,8 +1,9 @@
-#!ruby -Ks
+#!ruby -Ku
 
 require 'set'
 require 'pp'
 require './roma2reg.rb'
+require './win32-encoding.rb'
 
 def main
   initialize_pokemon_entries()
@@ -10,7 +11,7 @@ def main
   initialize_shuu_entry_range()
   initialize_trainer_names()
   initialize_entei()
-  @natures = %w(‚ª‚ñ‚Î‚è‚â ‚³‚İ‚µ‚ª‚è ‚ä‚¤‚©‚ñ ‚¢‚¶‚Á‚Ï‚è ‚â‚ñ‚¿‚á ‚¸‚Ô‚Æ‚¢ ‚·‚È‚¨ ‚Ì‚ñ‚« ‚í‚ñ‚Ï‚­ ‚Ì‚¤‚Ä‚ñ‚« ‚¨‚­‚Ñ‚å‚¤ ‚¹‚Á‚©‚¿ ‚Ü‚¶‚ß ‚æ‚¤‚« ‚Ş‚¶‚á‚« ‚Ğ‚©‚¦‚ß ‚¨‚Á‚Æ‚è ‚ê‚¢‚¹‚¢ ‚Ä‚ê‚â ‚¤‚Á‚©‚è‚â ‚¨‚¾‚â‚© ‚¨‚Æ‚È‚µ‚¢ ‚È‚Ü‚¢‚« ‚µ‚ñ‚¿‚å‚¤ ‚«‚Ü‚®‚ê)
+  @natures = %w(ãŒã‚“ã°ã‚Šã‚„ ã•ã¿ã—ãŒã‚Š ã‚†ã†ã‹ã‚“ ã„ã˜ã£ã±ã‚Š ã‚„ã‚“ã¡ã‚ƒ ãšã¶ã¨ã„ ã™ãªãŠ ã®ã‚“ã ã‚ã‚“ã±ã ã®ã†ã¦ã‚“ã ãŠãã³ã‚‡ã† ã›ã£ã‹ã¡ ã¾ã˜ã‚ ã‚ˆã†ã ã‚€ã˜ã‚ƒã ã²ã‹ãˆã‚ ãŠã£ã¨ã‚Š ã‚Œã„ã›ã„ ã¦ã‚Œã‚„ ã†ã£ã‹ã‚Šã‚„ ãŠã ã‚„ã‹ ãŠã¨ãªã—ã„ ãªã¾ã„ã ã—ã‚“ã¡ã‚‡ã† ãã¾ãã‚Œ)
   
   if ARGV.delete("--log")
     main_log_mode()
@@ -22,10 +23,10 @@ end
 def main_normal
   shuu = 1
 
-  print "‰Šúseed: "
+  print "åˆæœŸseed: "
   first_seed = Integer(gets())
 
-  print "Å‰‚Ì6•C: "
+  print "æœ€åˆã®6åŒ¹: "
   entries = input_pokemon_names(6, shuu, [])
   
   seed = step_seed(first_seed)
@@ -36,7 +37,7 @@ def main_normal
   consumption += n
   
   puts
-  print "‘Šè‚Ì3•C: "
+  print "ç›¸æ‰‹ã®3åŒ¹: "
   enemy_entries = input_pokemon_names(3, shuu, raw_entries)
   raw_enemy_entries, enemy_start_consumption, enemy_end_consumption, n = find_entries_and_show(shuu, first_seed, consumption, enemy_entries, entries)
   seed = step_seed(seed, n)
@@ -50,31 +51,31 @@ def main_log_mode
   date = "2009/10/21"
   second = 24
   times = 0.upto(23).map {|h| (0..50).step(10).map {|m| "%.2d:%.2d" % [h, m] } }.flatten
-  times = times[times.index('02:10')..-1]
+  times = times[times.index('16:50')..-1]
   
-  roads_on_save = input_roads("ƒZ[ƒu‘O‚Ìœpœj‚ÌˆÊ’u: ")
+  roads_on_save = input_roads("ã‚»ãƒ¼ãƒ–å‰ã®å¾˜å¾Šã®ä½ç½®: ")
   times.each do |time|
-    puts ": #{time}"
+    puts "æ™‚åˆ»: #{time}"
     datetime = "#{date} #{time}:#{second}"
     seed_high = date_to_seed_high(datetime)
-    roads = input_roads("ƒ[ƒh’¼Œã‚Ìœpœj‚ÌˆÊ’u: ")
+    roads = input_roads("ãƒ­ãƒ¼ãƒ‰ç›´å¾Œã®å¾˜å¾Šã®ä½ç½®: ")
     redo if main_log_mode_cycle(shuu, datetime, seed_high, roads, roads_on_save)
     roads_on_save = roads
   end
 end
 
 def main_log_mode_cycle(shuu, date, seed_high, roads, roads_on_save)
-  # ‰ŠúseedŒó•â‚ÌƒŠƒXƒg [[seed, œpœj‚Å‚Ì—”Á”ï—Ê], ...]
+  # åˆæœŸseedå€™è£œã®ãƒªã‚¹ãƒˆ [[seed, å¾˜å¾Šã§ã®ä¹±æ•°æ¶ˆè²»é‡], ...]
   seed_pick = search_seeds_by_roads(seed_high, roads, roads_on_save)
   if seed_pick.empty?
-    puts "“–‚Ä‚Í‚Ü‚é‰Šúseed‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ"
+    puts "å½“ã¦ã¯ã¾ã‚‹åˆæœŸseedãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“"
     return true
   end
   
-  print "‘Šè‚Ì3•C: "
+  print "ç›¸æ‰‹ã®3åŒ¹: "
   enemy_entries = input_pokemon_names(3, shuu, [])
   
-  print "Å‰‚Ì6•C: "
+  print "æœ€åˆã®6åŒ¹: "
   entries = input_pokemon_names(6, shuu, enemy_entries)
   
   seeds = seed_pick.map{|(s,c)| s}
@@ -82,9 +83,9 @@ def main_log_mode_cycle(shuu, date, seed_high, roads, roads_on_save)
   return true unless h
   raw_entries = h[:entries]
   first_seed = h[:first_seed]
-  entei_consumption = seed_pick.find {|(s,c)| s == first_seed}[1] # œpœj‚Å‚Ì—”Á”ï—Ê
+  entei_consumption = seed_pick.find {|(s,c)| s == first_seed}[1] # å¾˜å¾Šã§ã®ä¹±æ•°æ¶ˆè²»é‡
   
-  puts "‰Šúseed: %#.8x" % first_seed
+  puts "åˆæœŸseed: %#.8x" % first_seed
   seed = first_seed
   consumption = 0
   
@@ -99,7 +100,7 @@ def main_log_mode_cycle(shuu, date, seed_high, roads, roads_on_save)
   seed = step_seed(first_seed, consumption)
   
   begin
-    print "ƒgƒŒ[ƒi[: "
+    print "ãƒˆãƒ¬ãƒ¼ãƒŠãƒ¼: "
     enemy_trainer_name = get_trainer_name(gets.chomp)
   end until enemy_trainer_name
   
@@ -107,20 +108,20 @@ def main_log_mode_cycle(shuu, date, seed_high, roads, roads_on_save)
   open(filename, "wb") do |f|
     f.puts date
     f.puts "target: %#.4xXXXX" % seed_high
-    f.puts "ƒZ[ƒu‘O‚Ìœpœj‚ÌˆÊ’u: " + roads_on_save.join(",")
+    f.puts "ã‚»ãƒ¼ãƒ–å‰ã®å¾˜å¾Šã®ä½ç½®: " + roads_on_save.join(",")
     f.puts "%#.8x: %s (%d)" % [first_seed, roads.join(","), entei_consumption]
     f.puts
     f.puts entries.map(&:name).join(",")
-    f.puts "Á”ï‚³‚ê‚½—”‚Ì”ÍˆÍ: %d-%d" % [start_consumption, end_consumption]
-    f.puts "ƒVƒƒƒbƒtƒ‹: "+raw_entries.map {|e| entries.index(e) + 1 }.join(",")
+    f.puts "æ¶ˆè²»ã•ã‚ŒãŸä¹±æ•°ã®ç¯„å›²: %d-%d" % [start_consumption, end_consumption]
+    f.puts "ã‚·ãƒ£ãƒƒãƒ•ãƒ«: "+raw_entries.map {|e| entries.index(e) + 1 }.join(",")
     f.puts
     f.puts enemy_entries.map(&:name).join(",")
-    f.puts "Á”ï‚³‚ê‚½—”‚Ì”ÍˆÍ: %d-%d" % [enemy_start_consumption, enemy_end_consumption]
-    f.puts "ƒVƒƒƒbƒtƒ‹: "+raw_enemy_entries.map {|e| enemy_entries.index(e) + 1 }.join(",")
+    f.puts "æ¶ˆè²»ã•ã‚ŒãŸä¹±æ•°ã®ç¯„å›²: %d-%d" % [enemy_start_consumption, enemy_end_consumption]
+    f.puts "ã‚·ãƒ£ãƒƒãƒ•ãƒ«: "+raw_enemy_entries.map {|e| enemy_entries.index(e) + 1 }.join(",")
     f.puts
-    f.puts "ƒgƒŒ[ƒi[: #{enemy_trainer_name}"
+    f.puts "ãƒˆãƒ¬ãƒ¼ãƒŠãƒ¼: #{enemy_trainer_name}"
   end
-  puts "#{filename} ‚É•Û‘¶‚µ‚Ü‚µ‚½"
+  puts "#{filename} ã«ä¿å­˜ã—ã¾ã—ãŸ"
   false
 end
 
@@ -151,7 +152,7 @@ def input_pokemon_names(count, shuu, entries)
       if names.size == count
         state = 2
       else
-        puts "#{count}•C“ü—Í‚µ‚Ä‚­‚¾‚³‚¢"
+        puts "#{count}åŒ¹å…¥åŠ›ã—ã¦ãã ã•ã„"
       end
     when 2
       names.each do |name|
@@ -176,11 +177,11 @@ def input_pokemon_name(name, shuu, entries)
   re = Regexp.new("\\A#{roma2reg(name)}\\z")
   entry = get_factory_entry_by_regexp(shuu, re)
   unless entry
-    puts "#{name.inspect} ‚ÍŒ©‚Â‚©‚è‚Ü‚¹‚ñ"
+    puts "#{name.inspect} ã¯è¦‹ã¤ã‹ã‚Šã¾ã›ã‚“"
     return nil
   end
   if entries.include?(entry)
-    puts "d•¡: #{name.inspect}"
+    puts "é‡è¤‡: #{name.inspect}"
     return nil
   end
   entry
@@ -205,7 +206,7 @@ def find_entries_and_show(shuu, first_seed, consumption, entries, visited_entrie
   end_consumption = c
   
   puts
-  puts "ƒVƒƒƒbƒtƒ‹Œã: " + raw_entries.map {|e| entries.index(e) + 1 }.join(",")
+  puts "ã‚·ãƒ£ãƒƒãƒ•ãƒ«å¾Œ: " + raw_entries.map {|e| entries.index(e) + 1 }.join(",")
   puts "#{start_consumption}-#{end_consumption-1}"
   
   return raw_entries, start_consumption, end_consumption, c - consumption
@@ -214,11 +215,11 @@ end
 def find_entries_and_select_candidate(shuu, seeds, consumption, entries, visited_entries)
   candidate = find_factory_entries_candidate(shuu, seeds, consumption, entries, visited_entries)
   if candidate.empty?
-    puts "#{entries.size}•C‚Ì‘g‚İ‡‚í‚¹‚ÍŒ©‚Â‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½"
+    puts "#{entries.size}åŒ¹ã®çµ„ã¿åˆã‚ã›ã¯è¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã§ã—ãŸ"
     return nil
   end
   if candidate.size > 1
-    puts "#{entries.size}•C‚Ì‘g‚İ‡‚í‚¹‚Í#{candidate.size}’Ê‚è‚ÌŒó•â‚ª‚ ‚è‚Ü‚·"
+    puts "#{entries.size}åŒ¹ã®çµ„ã¿åˆã‚ã›ã¯#{candidate.size}é€šã‚Šã®å€™è£œãŒã‚ã‚Šã¾ã™"
     candidate.each_with_index do |h, i|
       es = h[:entries]
       pids = get_entries_pid(es, step_seed(h[:seed], h[:pos]+h[:consumption]))
@@ -226,7 +227,7 @@ def find_entries_and_select_candidate(shuu, seeds, consumption, entries, visited
       puts es.zip(pids).sort_by {|(e,p)| entries.index(e) }.map {|(e,p)| "%s:%.5d" % [e.name, p[:parent_id]] }.join(", ")
     end
     begin
-      print "Œó•â: "
+      print "å€™è£œ: "
       l = gets.strip
     end until /\A\d+\z/ =~ l and (0...candidate.size).include?(l.to_i-1)
     candidate[l.to_i-1]
@@ -280,7 +281,7 @@ def get_factory_entries(shuu, seed, count, visited_entries)
     n += 1
     redo if item_set.include?(entry.item)
     item_set << entry.item
-    redo if entries.include?(entry) || visited_entries.include?(entry) # ƒ_ƒu‚è
+    redo if entries.include?(entry) || visited_entries.include?(entry) # ãƒ€ãƒ–ã‚Š
     entries << entry
   end
   return entries, n
@@ -306,8 +307,8 @@ def show_factory_entries_by_seed(shuu, entries_count, seed, consumption, visited
                  range.first != 0 ? " + #{range.first}" : '',
                  id + 1,
                  e.name,
-                 included       ? " (d•¡‚Ì‚½‚ß–³‹)" : 
-                 item_collision ? " (ƒAƒCƒeƒ€d•¡‚Ì‚½‚ß–³‹)": "")
+                 included       ? " (é‡è¤‡ã®ãŸã‚ç„¡è¦–)" : 
+                 item_collision ? " (ã‚¢ã‚¤ãƒ†ãƒ é‡è¤‡ã®ãŸã‚ç„¡è¦–)": "")
     seed = step_seed(seed)
     n += 1
     redo if item_collision
@@ -369,11 +370,11 @@ def show_entries_pid(entries, seed, consumption)
   c = consumption
   entries.each do |e|
     puts "#{e.name}"
-    puts " eID: %.5d" % [seed >> 16]
+    puts " è¦ªID: %.5d" % [seed >> 16]
     puts "  %d: %#.8x" % [c, seed]
     seed = step_seed(seed)
     c += 1
-    #puts " e— ID: %.5d" % [seed >> 16]
+    #puts " è¦ªè£ID: %.5d" % [seed >> 16]
     #puts "  %d: %#.8x" % [c, seed]
     seed = step_seed(seed)
     c += 1
@@ -384,12 +385,12 @@ def show_entries_pid(entries, seed, consumption)
       seed = step_seed(seed, 2)
       c += 2
     end
-    puts " «Ši’l: %#.8x" % pid
+    puts " æ€§æ ¼å€¤: %#.8x" % pid
     puts "  %d: %#.8x" % [c, seed]
     puts "  %d: %#.8x" % [c + 1, step_seed(seed)]
-    puts " «Ši: " + @natures[pid % 25]
-    puts " “Á«: " + e.pokemon_entry.ability(pid % 2)
-    puts " «•Ê: " + pid2gender(pid, e.pokemon_entry)
+    puts " æ€§æ ¼: " + @natures[pid % 25]
+    puts " ç‰¹æ€§: " + e.pokemon_entry.ability(pid % 2)
+    puts " æ€§åˆ¥: " + pid2gender(pid, e.pokemon_entry)
     seed = step_seed(seed, 2)
     c += 2
   end
@@ -399,9 +400,9 @@ end
 def pid2gender(pid, pokemon)
   boundary = pokemon.gender_boundary
   if boundary
-    (pid & 0xff) > boundary ? "‰" : "Š"
+    (pid & 0xff) > boundary ? "â™‚" : "â™€"
   else
-    "•s–¾"
+    "ä¸æ˜"
   end
 end
 
@@ -420,7 +421,7 @@ end
 def initialize_pokemon_entries
   entries = @pokemon_entries = []
   name2id = @pokemon_name2id = {}
-  boundaries = {'‰‚Ì‚İ' => -1, 'Š‚Ì‚İ' => 255, '1:7' => 30, '1:3' => 63, '1:1' => 126, '3:1' => 190, '‚Ó‚ß‚¢' => nil}
+  boundaries = {'â™‚ã®ã¿' => -1, 'â™€ã®ã¿' => 255, '1:7' => 30, '1:3' => 63, '1:1' => 126, '3:1' => 190, 'ãµã‚ã„' => nil}
   open('pokedex.csv', 'rb') do |f|
     f.each_line.with_index do |l, i|
       row = l.chomp.split(',', -1)
@@ -454,7 +455,7 @@ end
 def effort_text_to_array(text)
   list = text.split('/')
   efforts = [0, 0, 0, 0, 0, 0]
-  status_names = 'HP,UŒ‚,–hŒä,“ÁU,“Á–h,‚·‚Î'.split(',')
+  status_names = 'HP,æ”»æ’ƒ,é˜²å¾¡,ç‰¹æ”»,ç‰¹é˜²,ã™ã°'.split(',')
   list.each do |i|
     efforts[status_names.index(i)] = list.size == 3 ? 170 : 252
   end
@@ -462,7 +463,7 @@ def effort_text_to_array(text)
 end
 
 def initialize_shuu_entry_range
-  @shuu_pokemons_count = [150, 100, 100, 136, 136, 136, 192] #Šeü‚Ìƒ|ƒPƒ‚ƒ“‚Ì”
+  @shuu_pokemons_count = [150, 100, 100, 136, 136, 136, 192] #å„å‘¨ã®ãƒã‚±ãƒ¢ãƒ³ã®æ•°
   @shuu_entries_range = []
   i = 0
   @shuu_pokemons_count.each do |n|
@@ -519,7 +520,7 @@ end
 def get_trainer_name(name)
   re = Regexp.new("\\A#{roma2reg(name)}\\z")
   @trainer_names.each do |line|
-    name = line.match(/‚Ì([^‚Ì]+)$/)[1]
+    name = line.match(/ã®([^ã®]+)$/)[1]
     if re =~ name
       return line
     end
@@ -536,8 +537,8 @@ def valid_roads(roads)
   roads.all? {|road| @johto_roads.include?(road) || @kanto_roads.include?(road) }
 end
 
-# ƒZ[ƒu‘O‚Æƒ[ƒh’¼Œã‚Ìœpœj‚ÌˆÊ’u‚Æ‘_‚Á‚½‰Šúseed‚ÌãˆÊ16ƒrƒbƒg‚ğó‚¯æ‚è
-# ‰Šúseed‚ÌŒó•â‚ğ•Ô‚·
+# ã‚»ãƒ¼ãƒ–å‰ã¨ãƒ­ãƒ¼ãƒ‰ç›´å¾Œã®å¾˜å¾Šã®ä½ç½®ã¨ç‹™ã£ãŸåˆæœŸseedã®ä¸Šä½16ãƒ“ãƒƒãƒˆã‚’å—ã‘å–ã‚Š
+# åˆæœŸseedã®å€™è£œã‚’è¿”ã™
 def search_seeds_by_roads(seed_high, roads, roads_on_save)
   result = []
   (-1).upto(1) do |i|

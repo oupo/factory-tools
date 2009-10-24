@@ -1,4 +1,5 @@
-#!ruby -Ks
+#!ruby -Ku
+require './win32-encoding.rb'
 
 def step_seed(seed, n=1)
   if n >= 0
@@ -13,10 +14,10 @@ def step_seed(seed, n=1)
   seed
 end
 
-natures = %w(‚ª‚ñ‚Î‚è‚â ‚³‚İ‚µ‚ª‚è ‚ä‚¤‚©‚ñ ‚¢‚¶‚Á‚Ï‚è ‚â‚ñ‚¿‚á ‚·‚Ô‚Æ‚¢ ‚·‚È‚¨ ‚Ì‚ñ‚« ‚í‚ñ‚Ï‚­ ‚Ì‚¤‚Ä‚ñ‚« ‚¨‚­‚Ñ‚å‚¤ ‚¹‚Á‚©‚¿ ‚Ü‚¶‚ß ‚æ‚¤‚« ‚Ş‚¶‚á‚« ‚Ğ‚©‚¦‚ß ‚¨‚Á‚Æ‚è ‚ê‚¢‚¹‚¢ ‚Ä‚ê‚â ‚¤‚Á‚©‚è‚â ‚¨‚¾‚â‚© ‚¨‚Æ‚È‚µ‚¢ ‚È‚Ü‚¢‚« ‚µ‚ñ‚¿‚å‚¤ ‚«‚Ü‚®‚ê)
+natures = %w(ãŒã‚“ã°ã‚Šã‚„ ã•ã¿ã—ãŒã‚Š ã‚†ã†ã‹ã‚“ ã„ã˜ã£ã±ã‚Š ã‚„ã‚“ã¡ã‚ƒ ã™ã¶ã¨ã„ ã™ãªãŠ ã®ã‚“ã ã‚ã‚“ã±ã ã®ã†ã¦ã‚“ã ãŠãã³ã‚‡ã† ã›ã£ã‹ã¡ ã¾ã˜ã‚ ã‚ˆã†ã ã‚€ã˜ã‚ƒã ã²ã‹ãˆã‚ ãŠã£ã¨ã‚Š ã‚Œã„ã›ã„ ã¦ã‚Œã‚„ ã†ã£ã‹ã‚Šã‚„ ãŠã ã‚„ã‹ ãŠã¨ãªã—ã„ ãªã¾ã„ã ã—ã‚“ã¡ã‚‡ã† ãã¾ãã‚Œ)
 natures_alias = %w(ga sa yu ij ya zu su non wa nou ok se ma yo mu hi ott re te uk od oto na si ki)
 
-abort "usage: ruby #{$0} 0x12345678 42 ‚ª‚ñ‚Î‚è‚â" if ARGV.size != 3
+abort "usage: ruby #{$0} 0x12345678 42 ãŒã‚“ã°ã‚Šã‚„" if ARGV.size != 3
 s = Integer(ARGV[0])
 n = Integer(ARGV[1])
 requested_nature = natures.index(ARGV[2]) || natures_alias.index(ARGV[2])

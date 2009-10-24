@@ -1,3 +1,5 @@
+#!ruby
+
 def step_seed(seed, n=1)
   if n >= 0
     n.times do
