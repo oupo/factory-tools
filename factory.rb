@@ -48,6 +48,37 @@ def main
   consumption += n
 end
 
+def main2
+  factory_initialize()
+  shuu = 1
+
+  begin
+    print "seed+消費: "
+  end until /\A(0x[0-9a-f]{8})(?:\+(\d+))?\z/ =~ gets().chomp
+  first_seed = Integer($1)
+  consumption = Integer($2 || 0)
+
+  seed = step_seed(first_seed, consumption)
+  
+  h = get_factory_entries_info(shuu, first_seed, seed, consumption, 6, [])
+  entries = h[:entries]
+  start_consumption, end_consumption = step_entries(h)
+  order = get_order_by_seed(step_seed(first_seed, end_consumption + 1))
+  
+  puts sortby_order(entries, order).map(&:name).join(",")
+  n = show_entries(shuu, h, consumption, sortby_order(entries, order), [])
+  n += @consumption_for_calc_order
+  seed = step_seed(seed, n)
+  consumption += n
+  
+  h = get_factory_entries_info(shuu, first_seed, seed, consumption, 3, entries)
+  puts
+  puts "相手の3匹: "+h[:entries].map(&:name).join(",")
+  n = show_entries(shuu, h, consumption, h[:entries], entries)
+  seed = step_seed(seed, n)
+  consumption += n
+end
+
 def factory_initialize
   initialize_pokemon_entries()
   initialize_factory_entries()
