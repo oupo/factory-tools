@@ -9,13 +9,11 @@ def main
   shuu = 1
 
   print "初期seed: "
-  first_seed = Integer(gets())
+  seed = first_seed = Integer(gets())
+  consumption = 0
 
   print "最初の6匹: "
   entries = input_pokemon_names(6, shuu, [])
-  
-  seed = step_seed(first_seed)
-  consumption = 1
   
   h = find_entries_and_select_candidate(shuu, [first_seed], consumption, entries, [])
   unless h
@@ -24,12 +22,16 @@ def main
   end
   raw_entries = h[:entries]
   start_consumption, end_consumption = step_entries(h)
+  order = get_order_by_seed(step_seed(first_seed, end_consumption + 1))
+  if order != create_order(raw_entries, entries)
+    puts "並び順が一致しません"
+    return
+  end
+  
   n = show_entries(shuu, h, consumption, entries, [])
+  n += @consumption_for_calc_order
   seed = step_seed(seed, n)
   consumption += n
-  
-  seed = step_seed(seed, 2)
-  consumption += 2
   
   puts
   print "相手の3匹: "
@@ -104,7 +106,7 @@ def input_pokemon_names(count, shuu, entries)
 end
 
 def input_pokemon_name(name, shuu, entries)
-  re = Regexp.new("\\A#{roma2reg(name)}\\z")
+  re = /\A#{roma2reg(name)}\z/
   entry = get_factory_entry_by_regexp(shuu, re)
   unless entry
     puts "#{name.inspect} は見つかりません"
@@ -211,7 +213,7 @@ def get_factory_entries(shuu, seed, count, visited_entries)
     n += 1
     redo if item_set.include?(entry.item)
     item_set << entry.item
-    redo if entries.include?(entry) || visited_entries.include?(entry) # ダブり
+    redo if entries.include?(entry) or visited_entries.include?(entry)
     entries << entry
   end
   return entries, n
@@ -299,7 +301,7 @@ end
 def show_entries_pid(entries, seed, consumption)
   c = consumption
   entries.each do |e|
-    puts "#{e.name}"
+    puts e.name
     puts " 親ID: %.5d" % [seed >> 16]
     puts "  %d: %#.8x" % [c, seed]
     seed = step_seed(seed)
@@ -334,6 +336,76 @@ def pid2gender(pid, pokemon)
   else
     "不明"
   end
+end
+
+def get_order_by_seed(seed)
+  i1 = (seed >> 16) % 6
+  i2 = (step_seed(seed) >> 16) % 6
+  order = (0...6).to_a
+  order[4], order[i1] = order[i1], order[4]
+  order[5], order[i2] = order[i2], order[5]
+  order
+end
+
+@consumption_for_calc_order = 2
+
+# ex) sortby_order(["a", "b", "c"], [2, 0, 1])
+#  => ["c", "a", "b"]
+def sortby_order(ary, order)
+  if ary.size != order.size \
+   or array_include_repetition?(ary) \
+   or not valid_order?(order)
+  then
+    raise ArgumentError
+  end
+  result = []
+  order.each_with_index do |o,i|
+    result[i] = ary[o]
+  end
+  result
+end
+
+# ex) reverse_order([2, 0, 1])
+#  => [1, 2, 0]
+def reverse_order(order)
+  if not valid_order?(order)
+    raise ArgumentError
+  end
+  create_order(order, (0...order.size).to_a)
+end
+
+# ex) create_order(["a", "b", "c"], ["c", "a", "b"])
+#  => [2, 0, 1]
+def create_order(before, after)
+  if before.size != after.size \
+   or array_include_repetition?(before) \
+   or array_include_repetition?(after)
+  then
+     raise ArgumentError
+  end
+  order = []
+  after.each do |e|
+    i = before.index(e)
+    unless i
+      raise ArgumentError
+    end
+    order << i
+  end
+  order
+end
+
+def valid_order?(order)
+  return false if array_include_repetition?(order)
+  order.all? {|i| i.kind_of?(Integer) and 0 <= i and i < order.size }
+end
+
+def array_include_repetition?(array)
+  set = Set.new
+  array.each do |e|
+    return true if set.include?(e)
+    set << e
+  end
+  false
 end
 
 def pokemon_entry(name)
@@ -438,7 +510,7 @@ def initialize_trainer_names
 end
 
 def get_trainer_name(name)
-  re = Regexp.new("\\A#{roma2reg(name)}\\z")
+  re = /\A#{roma2reg(name)}\z/
   @trainer_names.each do |line|
     name = line.match(/の([^の]+)$/)[1]
     if re =~ name
@@ -454,14 +526,14 @@ def initialize_entei
 end
 
 def valid_roads(roads)
-  roads.all? {|road| @johto_roads.include?(road) || @kanto_roads.include?(road) }
+  roads.all? {|road| @johto_roads.include?(road) or @kanto_roads.include?(road) }
 end
 
 # セーブ前とロード直後の徘徊の位置と狙った初期seedの上位16ビットを受け取り
 # 初期seedの候補を返す
-def search_seeds_by_roads(seed_high, roads, roads_on_save)
+def search_seeds_by_roads(seed_high, roads, roads_on_save, arrow_second_lag=true)
   result = []
-  (-1).upto(1) do |i|
+  (arrow_second_lag ? -1..1 : 0..0).each do |i|
     h = (((seed_high >> 8) + i) & 0xff) << 8 | (seed_high & 0xff)
     50.times do |j|
       r = (0x01e0 + j) & 0xffff
@@ -530,7 +602,7 @@ class PokemonEntry
   end
   
   def ability(i)
-    if i == 1 && abilities[1] == nil
+    if i == 1 and abilities[1] == nil
       abilities[0]
     else
       abilities[i]

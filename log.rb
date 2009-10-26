@@ -70,6 +70,16 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
   
   start_consumption, end_consumption = step_entries(h)
   
+  consumption = end_consumption + 1
+  seed = step_seed(first_seed, consumption)
+  order = get_order_by_seed(seed)
+  if order != create_order(raw_entries, entries)
+    puts "並び順が一致しません"
+    return true
+  end
+  seed = step_seed(seed, @consumption_for_calc_order)
+  consumption += @consumption_for_calc_order
+  
   # 6匹の性格値生成終了後2つ乱数を消費してから相手の3匹の種類が決定される
   consumption = end_consumption + 1 + 2
   seed = step_seed(first_seed, consumption)
