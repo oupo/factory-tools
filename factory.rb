@@ -302,10 +302,12 @@ def show_entries_pid(entries, seed, consumption)
   c = consumption
   entries.each do |e|
     puts e.name
+    parent_id = seed >> 16
     puts " 親ID: %.5d" % [seed >> 16]
     puts "  %d: %#.8x" % [c, seed]
     seed = step_seed(seed)
     c += 1
+    secret_id = seed >> 16
     #puts " 親裏ID: %.5d" % [seed >> 16]
     #puts "  %d: %#.8x" % [c, seed]
     seed = step_seed(seed)
@@ -323,6 +325,9 @@ def show_entries_pid(entries, seed, consumption)
     puts " 性格: " + @natures[pid % 25]
     puts " 特性: " + e.pokemon_entry.ability(pid % 2)
     puts " 性別: " + pid2gender(pid, e.pokemon_entry)
+    if ((parent_id ^ secret_id ^ (pid >> 16) ^ (pid & 0xffff)) & ~7) == 0
+      puts " 色違い"
+    end
     seed = step_seed(seed, 2)
     c += 2
   end
