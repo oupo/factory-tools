@@ -133,7 +133,7 @@ def show_entries(shuu, h, consumption, entries, visited_entries)
   end_consumption = c - 1
   
   puts
-  puts "シャッフル後: " + raw_entries.map {|e| entries.index(e) + 1 }.join(",")
+  puts "シャッフル結果: " + entries.map {|e| raw_entries.index(e) + 1 }.join(",")
   puts "#{start_consumption}-#{end_consumption}"
   
   return c - consumption

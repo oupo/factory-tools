@@ -98,11 +98,11 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
     f.puts
     f.puts entries.map(&:name).join(",")
     f.puts "消費された乱数の範囲: %d-%d" % [start_consumption, end_consumption]
-    f.puts "シャッフル: "+raw_entries.map {|e| entries.index(e) + 1 }.join(",")
+    f.puts "シャッフル: "+entries.map {|e| raw_entries.index(e) + 1 }.join(",")
     f.puts
     f.puts enemy_entries.map(&:name).join(",")
     f.puts "消費された乱数の範囲: %d-%d" % [enemy_start_consumption, enemy_end_consumption]
-    f.puts "シャッフル: "+raw_enemy_entries.map {|e| enemy_entries.index(e) + 1 }.join(",")
+    f.puts "シャッフル: "+enemy_entries.map {|e| raw_enemy_entries.index(e) + 1 }.join(",")
     f.puts
     f.puts "トレーナー: #{enemy_trainer_name}"
   end
