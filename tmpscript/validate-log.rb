@@ -27,15 +27,6 @@ def read_log_file(f)
   h
 end
 
-def get_order_by_seed(seed)
-  i1 = (seed >> 16) % 6
-  i2 = (step_seed(seed) >> 16) % 6
-  order = (0...6).to_a
-  order[4], order[i1] = order[i1], order[4]
-  order[5], order[i2] = order[i2], order[5]
-  order
-end
-
 filenames = Dir.glob("log/*").sort
 errors = []
 ok_files = 0
@@ -65,9 +56,9 @@ filenames.each do |filename|
   if end_consumption != h[:end_consumption]
     errors << [filename, "end_consumption が一致しません"]
   end
-  order = swap2order(step_seed(first_seed, end_consumption + 1))
+  order = get_order_by_seed(step_seed(first_seed, end_consumption + 1))
   if h[:order] != order
-    puts "order が一致しません"
+    errors << [filename, "order が一致しません"]
   end
   enemy_start_consumption = end_consumption + 3
   enemy_info = get_factory_entries_info(1,
