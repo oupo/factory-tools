@@ -2,3 +2,14 @@
 
 ファクトリー関連のデータは以下より拝借しました。
 http://pokemon-ds.happy.nu/platinum/
+
+factory.rb: seedと消費量を入力して最初の6匹と相手の3匹の詳細を出力
+find-by-name.rb: 初期seedと6匹の名前を入力してその組み合わせを探し詳細を出力
+log.rb: 出た6匹の情報をログに保存
+pid2nature.rb: ポケモン名と性格値から性別、特性、性格を出力
+
+tmpscript/check-interval.rb: 6匹の性格値が決定してから相手の3匹の種類が決定されるまでの乱数消費量が2固定であることをチェック
+tmpscript/show-swap-rand.rb: 6匹のシャッフルに使っている乱数列を出力
+tmpscript/shuffle-combinations.rb: 6匹のシャッフル結果の組み合わせを出力
+tmpscript/tabulate-shuffle.rb: ログからシャッフル結果を集計
+tmpscript/validate-log.rb: ログに間違いがないか確認
