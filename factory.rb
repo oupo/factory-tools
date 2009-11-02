@@ -301,7 +301,7 @@ def get_entries_pid(entries, seed)
     parent_id = seed >> 16
     seed = step_seed(seed)
     c += 1
-    hidden_parent_id = seed >> 16
+    secret_id = seed >> 16
     seed = step_seed(seed)
     c += 1
     nature = @natures.index(e.nature)
@@ -309,8 +309,8 @@ def get_entries_pid(entries, seed)
       pid = seed >> 16 | step_seed(seed) >> 16 << 16
       seed = step_seed(seed, 2)
       c += 2
-    end while pid % 25 != nature
-    result << {:parent_id => parent_id, :hidden_parent_id => hidden_parent_id, :pid => pid}
+    end while pid % 25 != nature or is_shiny_pid(parent_id, secret_id, pid)
+    result << {:parent_id => parent_id, :secret_id => secret_id, :pid => pid}
   end
   result
 end
@@ -321,7 +321,7 @@ def step_entries_pid(entries, seed)
     parent_id = seed >> 16
     seed = step_seed(seed)
     c += 1
-    hidden_parent_id = seed >> 16
+    secret_id = seed >> 16
     seed = step_seed(seed)
     c += 1
     nature = @natures.index(e.nature)
@@ -329,7 +329,7 @@ def step_entries_pid(entries, seed)
       pid = seed >> 16 | step_seed(seed) >> 16 << 16
       seed = step_seed(seed, 2)
       c += 2
-    end while pid % 25 != nature
+    end while pid % 25 != nature or is_shiny_pid(parent_id, secret_id, pid)
   end
   c
 end
@@ -351,7 +351,7 @@ def show_entries_pid(entries, seed, consumption)
     nature = @natures.index(e.nature)
     while true
       pid = seed >> 16 | step_seed(seed) >> 16 << 16
-      break if pid % 25 == nature
+      break if pid % 25 == nature and !is_shiny_pid(parent_id, secret_id, pid)
       seed = step_seed(seed, 2)
       c += 2
     end
@@ -361,9 +361,6 @@ def show_entries_pid(entries, seed, consumption)
     puts " 性格: " + @natures[pid % 25]
     puts " 特性: " + e.pokemon_entry.ability(pid % 2)
     puts " 性別: " + pid2gender(pid, e.pokemon_entry)
-    if ((parent_id ^ secret_id ^ (pid >> 16) ^ (pid & 0xffff)) & ~7) == 0
-      puts " 色違い"
-    end
     seed = step_seed(seed, 2)
     c += 2
   end
@@ -377,6 +374,10 @@ def pid2gender(pid, pokemon)
   else
     "不明"
   end
+end
+
+def is_shiny_pid(parent_id, secret_id, pid)
+  ((parent_id ^ secret_id ^ (pid >> 16) ^ (pid & 0xffff)) & ~7) == 0
 end
 
 def get_order_by_seed(seed)
