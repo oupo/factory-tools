@@ -92,7 +92,12 @@ def input_roads(caption)
   roads = nil
   1.times do
     print caption
-    roads = gets.split(",").map{|i| Integer(i) }
+    roads_str = gets.split(",")
+    begin
+      roads = roads_str.map{|i| Integer(i) }
+    rescue ArgumentError
+      redo
+    end
     unless valid_roads(roads)
       puts "invalid roads"
       redo
