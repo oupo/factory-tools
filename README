@@ -13,3 +13,7 @@ tmpscript/show-swap-rand.rb: 6匹のシャッフルに使っている乱数列�
 tmpscript/shuffle-combinations.rb: 6匹のシャッフル結果の組み合わせを出力
 tmpscript/tabulate-shuffle.rb: ログからシャッフル結果を集計
 tmpscript/validate-log.rb: ログに間違いがないか確認
+tmpscript/utugi.rb: ウツギ博士に電話したときの電話の内容を出力
+tmpscript/first-seed.rb: 初期seedを合わせるためのスクリプト（徘徊位置確認、タイマー機能）
+tmpscript/shiny.c: 色違いの出る（はずだった）seedを出力
+tmpscript/gen-factory-data-for-c.rb shiny.cで使う構造体定義の出力
