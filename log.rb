@@ -55,7 +55,7 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
   entries = input_pokemon_names(6, shuu, enemy_entries)
   
   seeds = seed_pick.map{|(s,c)| s}
-  h = find_entries_and_select_candidate(shuu, seeds, 0, entries, [])
+  h = entries_info = find_6_entries(shuu, seeds, entries)
   unless h
     puts "6匹の組み合わせは見つかりませんでした"
     return true
@@ -80,10 +80,8 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
   seed = step_seed(seed, @consumption_for_calc_order)
   consumption += @consumption_for_calc_order
   
-  # 6匹の性格値生成終了後2つ乱数を消費してから相手の3匹の種類が決定される
-  consumption = end_consumption + 1 + 2
-  seed = step_seed(first_seed, consumption)
-  h = get_factory_entries_info(shuu, first_seed, seed, consumption, 3, entries)
+  
+  h = enemy_entries_info = get_factory_entries_info(shuu, first_seed, seed, consumption, 3, entries)
   unless h[:entries].all? {|i| enemy_entries.include?(i) }
     puts "3匹の組み合わせが一致しません"
     return true
@@ -99,6 +97,7 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
     enemy_trainer_name = get_trainer_name(gets.chomp)
   end until enemy_trainer_name
   
+  
   filename = date_to_filename(date)
   open(filename, "wb") do |f|
     f.puts date
@@ -107,7 +106,7 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
     f.puts "%#.8x: %s (%d)" % [first_seed, roads.join(","), entei_consumption]
     f.puts
     f.puts entries.map(&:name).join(",")
-    f.puts "消費された乱数の範囲: %d-%d" % [start_consumption, end_consumption]
+    f.puts "消費された乱数の範囲: %s-%d" % [entries_info.start_consumption_str, end_consumption]
     f.puts "シャッフル: "+entries.map {|e| raw_entries.index(e) + 1 }.join(",")
     f.puts
     f.puts enemy_entries.map(&:name).join(",")

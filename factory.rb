@@ -128,13 +128,22 @@ def show_entries(shuu, h, consumption, entries, visited_entries)
   
   puts
   puts "シャッフル結果: " + entries.map {|e| raw_entries.index(e) + 1 }.join(",")
-  puts "#{start_consumption}-#{end_consumption}"
+  puts "#{h.start_consumption_str}-#{end_consumption}"
   
   return c - consumption
 end
 
-def find_entries_and_select_candidate(shuu, seeds, consumption, entries, visited_entries)
-  candidate = find_factory_entries_candidate(shuu, seeds, consumption, entries, visited_entries)
+def find_6_entries(shuu, seeds, target_entries)
+  candidate = find_6_entries_candidate(shuu, seeds, target_entries)
+  select_entries_candidate(candidate, target_entries)
+end
+
+def find_3_entries(shuu, first_seed, seed, consumption, target_entries, visited_entries)
+  candidate = find_3_entries_candidate(shuu, first_seed, seed, consumption, target_entries, visited_entries)
+  select_entries_candidate(candidate, target_entries)
+end
+
+def select_entries_candidate(candidate, entries)
   if candidate.empty?
     return nil
   end
@@ -143,7 +152,7 @@ def find_entries_and_select_candidate(shuu, seeds, consumption, entries, visited
     candidate.each_with_index do |h, i|
       es = h[:entries]
       pids = get_entries_pid(es, step_seed(h[:seed], h[:steps]))
-      puts "%d: %#.8x +%d..%d" % [i+1, h[:first_seed], h[:consumption], h[:consumption] + h[:steps] - 1]
+      puts "%d: %#.8x +%s..%d" % [i+1, h[:first_seed], h.start_consumption_str, h[:consumption] + h[:steps] - 1]
       puts es.zip(pids).sort_by {|(e,p)| entries.index(e) }.map {|(e,p)| "%s:%.5d" % [e.name, p[:parent_id]] }.join(", ")
     end
     begin
@@ -171,16 +180,26 @@ def step_entries(h)
   return start_consumption, end_consumption
 end
 
-def find_factory_entries_candidate(shuu, seeds, consumption, target_entries, visited_entries)
+# 6匹の組み合わせの候補を出力
+def find_6_entries_candidate(shuu, seeds, target_entries)
   result = []
+  visited_entries = []
   seeds.each do |first_seed|
-    c = consumption
-    seed = step_seed(first_seed, consumption)
+    c = 0
+    seed = first_seed
     100.times do
       info = get_factory_entries_info(shuu, first_seed, seed, c,
                                       target_entries.size, visited_entries)
       if info[:entries].all? {|i| target_entries.include?(i) }
-        result << info
+        # 終端位置とエントリの順番も同じ候補があった場合
+        # たとえば A B C D E F を探していて A A B C D E F という乱数列だった場合 0 から初めても 1 から初めても
+        # 終端位置とエントリの順番は同じ
+        r = result.find {|e| info[:entries] == e[:entries] and e[:consumption] + e[:steps] == c + info[:steps] }
+        if r
+          r[:consumptions] << c
+        else
+          result << info
+        end
       end
       seed = step_seed(seed)
       c += 1
@@ -189,9 +208,46 @@ def find_factory_entries_candidate(shuu, seeds, consumption, target_entries, vis
   result
 end
 
+# 3匹の組み合わせの候補を出力
+def find_3_entries_candidate(shuu, first_seed, seed, consumption, target_entries, visited_entries)
+  result = []
+  c = consumption
+  100.times do
+    info = get_factory_entries_info(shuu, first_seed, seed, c,
+                                    target_entries.size, visited_entries)
+    # 相手の3匹はシャッフルされないので並び順も同じであるものしか認めない
+    if info[:entries] == target_entries
+      # 終端位置とエントリの順番も同じ候補があった場合
+      # たとえば A B C を探していて A B A B C という乱数列だった場合 0 から初めても 2 から初めても
+      # 終端位置とエントリの順番は同じ
+      r = result.find {|e| e[:consumption] + e[:steps] == c + info[:steps] }
+      if r
+        r[:consumptions] << c
+      else
+        result << info
+      end
+    end
+    seed = step_seed(seed)
+    c += 1
+  end
+  result
+end
+
+FactoryEntriesInfo = Struct.new(:first_seed, :seed, :entries, :consumption, :consumptions, :steps)
+
+class FactoryEntriesInfo
+  def start_consumption_str
+    if consumptions.size == 1
+      consumption.to_s # (== consumptions[0])
+    else
+      "(#{consumptions.join(",")})"
+    end
+  end
+end
+
 def get_factory_entries_info(shuu, first_seed, seed, consumption, count, visited_entries)
   entries, n = get_factory_entries(shuu, seed, count, visited_entries)
-  {:first_seed => first_seed, :seed => seed, :entries => entries, :consumption => consumption, :steps => n}
+  FactoryEntriesInfo.new(first_seed, seed, entries, consumption, [consumption], n)
 end
 
 def get_factory_entries(shuu, seed, count, visited_entries)
@@ -533,7 +589,7 @@ def search_seeds_by_roads(seed_high, roads, roads_on_save, arrow_second_lag=true
   result = []
   (arrow_second_lag ? -1..1 : 0..0).each do |i|
     h = (((seed_high >> 8) + i) & 0xff) << 8 | (seed_high & 0xff)
-    50.times do |j|
+    0x500.times do |j|
       r = (0x01e0 + j) & 0xffff
       seed = h << 16 | r
       res = get_roads_by_seed(seed, roads_on_save)

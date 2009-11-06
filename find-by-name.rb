@@ -12,7 +12,7 @@ consumption = 0
 print "最初の6匹: "
 entries = input_pokemon_names(6, shuu, [])
 
-h = find_entries_and_select_candidate(shuu, [first_seed], consumption, entries, [])
+h = find_6_entries(shuu, [first_seed], entries)
 unless h
   puts "6匹の組み合わせは見つかりませんでした"
   return
