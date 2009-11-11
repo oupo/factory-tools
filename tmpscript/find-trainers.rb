@@ -35,7 +35,7 @@ range_min.upto(100) do |n|
   seed = step_seed(first_seed, i)
   while i <= -13
     if is_match(n, seed)
-      puts "rand %% %d + %d: %d (%#.8x)" % [n, 81 - (seed >> 16) % n, i-20, seed]
+      puts "rand %% %d + %d: %d (%#.8x)" % [n, @expected_trainers[0] - (seed >> 16) % n, i-20, seed]
     end
     seed = step_seed(seed)
     i += 1
