@@ -7,6 +7,7 @@ require './win32-encoding.rb'
 def main
   factory_initialize()
   shuu = 1
+  num_bonus = 0
 
   begin
     print "seed+消費: "
@@ -16,7 +17,7 @@ def main
 
   seed = step_seed(first_seed, consumption)
   
-  h = get_factory_entries_info(shuu, first_seed, seed, consumption, 6, [])
+  h = get_6_entries_info(shuu, first_seed, seed, consumption, num_bonus)
   entries = h[:entries]
   start_consumption, end_consumption = step_entries(h)
   order = get_order_by_seed(step_seed(first_seed, end_consumption + 1))
@@ -27,7 +28,7 @@ def main
   seed = step_seed(seed, n)
   consumption += n
   
-  h = get_factory_entries_info(shuu, first_seed, seed, consumption, 3, entries)
+  h = get_3_entries_info(shuu, first_seed, seed, consumption, entries)
   puts
   puts "相手の3匹: "+h[:entries].map(&:name).join(",")
   n = show_entries(shuu, h, consumption, h[:entries], entries)
@@ -116,7 +117,7 @@ def show_entries(shuu, h, consumption, entries, visited_entries)
   seed, c = h[:seed], h[:consumption]
   start_consumption = c
   puts
-  show_factory_entries_by_seed(shuu, entries.size, seed, c, visited_entries)
+  show_factory_entries_by_seed(shuu, entries.size, seed, c, visited_entries, h[:num_bonus])
   seed = step_seed(seed, h[:steps])
   c += h[:steps]
   
@@ -133,8 +134,8 @@ def show_entries(shuu, h, consumption, entries, visited_entries)
   return c - consumption
 end
 
-def find_6_entries(shuu, seeds, target_entries)
-  candidate = find_6_entries_candidate(shuu, seeds, target_entries)
+def find_6_entries(shuu, seeds, target_entries, num_bonus)
+  candidate = find_6_entries_candidate(shuu, seeds, target_entries, num_bonus)
   select_entries_candidate(candidate, target_entries)
 end
 
@@ -181,15 +182,14 @@ def step_entries(h)
 end
 
 # 6匹の組み合わせの候補を出力
-def find_6_entries_candidate(shuu, seeds, target_entries)
+def find_6_entries_candidate(shuu, seeds, target_entries, num_bonus)
   result = []
   visited_entries = []
   seeds.each do |first_seed|
     c = 0
     seed = first_seed
     100.times do
-      info = get_factory_entries_info(shuu, first_seed, seed, c,
-                                      target_entries.size, visited_entries)
+      info = get_6_entries_info(shuu, first_seed, seed, c, visited_entries, num_bonus)
       if info[:entries].all? {|i| target_entries.include?(i) }
         # 終端位置とエントリの順番も同じ候補があった場合
         # たとえば A B C D E F を探していて A A B C D E F という乱数列だった場合 0 から初めても 1 から初めても
@@ -213,8 +213,7 @@ def find_3_entries_candidate(shuu, first_seed, seed, consumption, target_entries
   result = []
   c = consumption
   100.times do
-    info = get_factory_entries_info(shuu, first_seed, seed, c,
-                                    target_entries.size, visited_entries)
+    info = get_3_entries_info(shuu, first_seed, seed, c, visited_entries)
     # 相手の3匹はシャッフルされないので並び順も同じであるものしか認めない
     if info[:entries] == target_entries
       # 終端位置とエントリの順番も同じ候補があった場合
@@ -233,7 +232,7 @@ def find_3_entries_candidate(shuu, first_seed, seed, consumption, target_entries
   result
 end
 
-FactoryEntriesInfo = Struct.new(:first_seed, :seed, :entries, :consumption, :consumptions, :steps)
+FactoryEntriesInfo = Struct.new(:first_seed, :seed, :entries, :consumption, :consumptions, :steps, :num_bonus)
 
 class FactoryEntriesInfo
   def start_consumption_str
@@ -245,17 +244,26 @@ class FactoryEntriesInfo
   end
 end
 
-def get_factory_entries_info(shuu, first_seed, seed, consumption, count, visited_entries)
-  entries, n = get_factory_entries(shuu, seed, count, visited_entries)
-  FactoryEntriesInfo.new(first_seed, seed, entries, consumption, [consumption], n)
+def get_6_entries_info(shuu, first_seed, seed, consumption, num_bonus)
+  get_factory_entries_info(shuu, first_seed, seed, consumption, 6, [], num_bonus)
 end
 
-def get_factory_entries(shuu, seed, count, visited_entries)
+def get_3_entries_info(shuu, first_seed, seed, consumption, visited_entries)
+  get_factory_entries_info(shuu, first_seed, seed, consumption, 3, visited_entries, 0)
+end
+
+def get_factory_entries_info(shuu, first_seed, seed, consumption, count, visited_entries, num_bonus)
+  entries, n = get_factory_entries(shuu, seed, count, visited_entries, num_bonus)
+  FactoryEntriesInfo.new(first_seed, seed, entries, consumption, [consumption], n, num_bonus)
+end
+
+def get_factory_entries(shuu, seed, count, visited_entries, num_bonus)
   entries = []
   item_set = entries_to_item_set(visited_entries)
   n = 0
-  count.times do
-    id = factory_id_by_seed(shuu, seed)
+  count.times do |i|
+    is_bonus = count - i <= num_bonus
+    id = factory_id_by_seed(is_bonus ? shuu + 1 : shuu, seed)
     entry = @factory_entries[id]
     seed = step_seed(seed)
     n += 1
@@ -267,14 +275,16 @@ def get_factory_entries(shuu, seed, count, visited_entries)
   return entries, n
 end
 
-def show_factory_entries_by_seed(shuu, entries_count, seed, consumption, visited_entries)
+def show_factory_entries_by_seed(shuu, entries_count, seed, consumption, visited_entries, num_bonus)
   ids = []
   item_set = entries_to_item_set(visited_entries)
   n = 0
-  count = get_shuu_entries_count(shuu)
-  range = get_entries_range(shuu)
-  entries_count.times do
-    id = factory_id_by_seed(shuu, seed)
+  entries_count.times do |i|
+    is_bonus = entries_count - i <= num_bonus
+    entry_shuu = is_bonus ? shuu + 1 : shuu
+    count = get_shuu_entries_count(entry_shuu)
+    range = get_entries_range(entry_shuu)
+    id = factory_id_by_seed(entry_shuu, seed)
     e = @factory_entries[id]
     included = ids.include?(id) || visited_entries.include?(e)
     item_collision = item_set.include?(e.item)

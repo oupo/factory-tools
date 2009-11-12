@@ -4,6 +4,7 @@ require './factory.rb'
 
 factory_initialize()
 shuu = 1
+num_bonus = 0
 
 print "初期seed: "
 seed = first_seed = Integer(gets())
@@ -12,7 +13,7 @@ consumption = 0
 print "最初の6匹: "
 entries = input_pokemon_names(6, shuu, [])
 
-h = find_6_entries(shuu, [first_seed], entries)
+h = find_6_entries(shuu, [first_seed], entries, num_bonus)
 unless h
   puts "6匹の組み合わせは見つかりませんでした"
   return
@@ -33,7 +34,7 @@ consumption += n
 puts
 print "相手の3匹: "
 enemy_entries = input_pokemon_names(3, shuu, raw_entries)
-h = get_factory_entries_info(shuu, first_seed, seed, consumption, 3, entries)
+h = get_3_entries_info(shuu, first_seed, seed, consumption, entries)
 unless h[:entries].all? {|i| enemy_entries.include?(i) }
   puts "3匹の組み合わせが一致しません"
   return true

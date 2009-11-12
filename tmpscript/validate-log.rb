@@ -39,12 +39,11 @@ filenames.each do |filename|
     errors << [filename, "roads が一致しません"]
     next
   end
-  info = get_factory_entries_info(1,
-                                  first_seed,
-                                  step_seed(first_seed, h[:start_consumption]),
-                                  h[:start_consumption],
-                                  6,
-                                  [])
+  info = get_6_entries_info(1,
+                            first_seed,
+                            step_seed(first_seed, h[:start_consumption]),
+                            h[:start_consumption],
+                            0)
   if sortby_order(info[:entries], h[:order]) != h[:entries]
     errors << [filename, "entries が一致しません"]
     next
@@ -61,12 +60,11 @@ filenames.each do |filename|
     errors << [filename, "order が一致しません"]
   end
   enemy_start_consumption = end_consumption + 3
-  enemy_info = get_factory_entries_info(1,
-                                        first_seed,
-                                        step_seed(first_seed, enemy_start_consumption),
-                                        enemy_start_consumption,
-                                        3,
-                                        h[:entries])
+  enemy_info = get_3_entries_info(1,
+                                  first_seed,
+                                  step_seed(first_seed, enemy_start_consumption),
+                                  enemy_start_consumption,
+                                  h[:entries])
   if sortby_order(enemy_info[:entries], h[:enemy_order]) != h[:enemy_entries]
     errors << [filename, "enemy_entries が一致しません"]
   end

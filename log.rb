@@ -55,7 +55,7 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
   entries = input_pokemon_names(6, shuu, enemy_entries)
   
   seeds = seed_pick.map{|(s,c)| s}
-  h = entries_info = find_6_entries(shuu, seeds, entries)
+  h = entries_info = find_6_entries(shuu, seeds, entries, 0)
   unless h
     puts "6匹の組み合わせは見つかりませんでした"
     return true
@@ -81,7 +81,7 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
   consumption += @consumption_for_calc_order
   
   
-  h = enemy_entries_info = get_factory_entries_info(shuu, first_seed, seed, consumption, 3, entries)
+  h = enemy_entries_info = get_3_entries_info(shuu, first_seed, seed, consumption, entries)
   unless h[:entries].all? {|i| enemy_entries.include?(i) }
     puts "3匹の組み合わせが一致しません"
     return true
