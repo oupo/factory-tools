@@ -24,7 +24,7 @@ def main
   
   puts sortby_order(entries, order).map(&:name).join(",")
   n = show_entries(shuu, h, consumption, sortby_order(entries, order), [])
-  n += @consumption_for_calc_order
+  n += $consumption_for_calc_order
   seed = step_seed(seed, n)
   consumption += n
   
@@ -42,7 +42,7 @@ def factory_initialize
   initialize_shuu_entry_range()
   initialize_trainer_names()
   initialize_entei()
-  @natures = %w(がんばりや さみしがり ゆうかん いじっぱり やんちゃ ずぶとい すなお のんき わんぱく のうてんき おくびょう せっかち まじめ ようき むじゃき ひかえめ おっとり れいせい てれや うっかりや おだやか おとなしい なまいき しんちょう きまぐれ)
+  $natures = %w(がんばりや さみしがり ゆうかん いじっぱり やんちゃ ずぶとい すなお のんき わんぱく のうてんき おくびょう せっかち まじめ ようき むじゃき ひかえめ おっとり れいせい てれや うっかりや おだやか おとなしい なまいき しんちょう きまぐれ)
 end
 
 def input_roads(caption)
@@ -189,7 +189,7 @@ def find_6_entries_candidate(shuu, seeds, target_entries, num_bonus)
     c = 0
     seed = first_seed
     100.times do
-      info = get_6_entries_info(shuu, first_seed, seed, c, visited_entries, num_bonus)
+      info = get_6_entries_info(shuu, first_seed, seed, c, num_bonus)
       if info[:entries].all? {|i| target_entries.include?(i) }
         # 終端位置とエントリの順番も同じ候補があった場合
         # たとえば A B C D E F を探していて A A B C D E F という乱数列だった場合 0 から初めても 1 から初めても
@@ -264,7 +264,7 @@ def get_factory_entries(shuu, seed, count, visited_entries, num_bonus)
   count.times do |i|
     is_bonus = count - i <= num_bonus
     id = factory_id_by_seed(is_bonus ? shuu + 1 : shuu, seed)
-    entry = @factory_entries[id]
+    entry = $factory_entries[id]
     seed = step_seed(seed)
     n += 1
     redo if item_set.include?(entry.item)
@@ -285,7 +285,7 @@ def show_factory_entries_by_seed(shuu, entries_count, seed, consumption, visited
     count = get_shuu_entries_count(entry_shuu)
     range = get_entries_range(entry_shuu)
     id = factory_id_by_seed(entry_shuu, seed)
-    e = @factory_entries[id]
+    e = $factory_entries[id]
     included = ids.include?(id) || visited_entries.include?(e)
     item_collision = item_set.include?(e.item)
     puts sprintf("%d: %#.8x %d - %#.4x %% %d%s = %d %s%s",
@@ -326,7 +326,7 @@ def get_entries_pid(entries, seed)
     secret_id = seed >> 16
     seed = step_seed(seed)
     c += 1
-    nature = @natures.index(e.nature)
+    nature = $natures.index(e.nature)
     begin
       pid = seed >> 16 | step_seed(seed) >> 16 << 16
       seed = step_seed(seed, 2)
@@ -346,7 +346,7 @@ def step_entries_pid(entries, seed)
     secret_id = seed >> 16
     seed = step_seed(seed)
     c += 1
-    nature = @natures.index(e.nature)
+    nature = $natures.index(e.nature)
     begin
       pid = seed >> 16 | step_seed(seed) >> 16 << 16
       seed = step_seed(seed, 2)
@@ -370,7 +370,7 @@ def show_entries_pid(entries, seed, consumption)
     #puts "  %d: %#.8x" % [c, seed]
     seed = step_seed(seed)
     c += 1
-    nature = @natures.index(e.nature)
+    nature = $natures.index(e.nature)
     while true
       pid = seed >> 16 | step_seed(seed) >> 16 << 16
       break if pid % 25 == nature and !is_shiny_pid(parent_id, secret_id, pid)
@@ -380,7 +380,7 @@ def show_entries_pid(entries, seed, consumption)
     puts " 性格値: %#.8x" % pid
     puts "  %d: %#.8x" % [c, seed]
     puts "  %d: %#.8x" % [c + 1, step_seed(seed)]
-    puts " 性格: " + @natures[pid % 25]
+    puts " 性格: " + $natures[pid % 25]
     puts " 特性: " + e.pokemon_entry.ability(pid % 2)
     puts " 性別: " + pid2gender(pid, e.pokemon_entry)
     seed = step_seed(seed, 2)
@@ -411,7 +411,7 @@ def get_order_by_seed(seed)
   order
 end
 
-@consumption_for_calc_order = 2
+$consumption_for_calc_order = 2
 
 # ex) sortby_order(["a", "b", "c"], [2, 0, 1])
 #  => ["c", "a", "b"]
@@ -473,9 +473,9 @@ def array_include_repetition?(array)
 end
 
 def pokemon_entry(name)
-  id = @pokemon_name2id[name]
+  id = $pokemon_name2id[name]
   return nil unless id
-  @pokemon_entries[id]
+  $pokemon_entries[id]
 end
 
 def factory_id_by_seed(shuu, seed)
@@ -485,8 +485,8 @@ def factory_id_by_seed(shuu, seed)
 end
 
 def initialize_pokemon_entries
-  entries = @pokemon_entries = []
-  name2id = @pokemon_name2id = {}
+  entries = $pokemon_entries = []
+  name2id = $pokemon_name2id = {}
   boundaries = {'♂のみ' => -1, '♀のみ' => 255, '1:7' => 30, '1:3' => 63, '1:1' => 126, '3:1' => 190, 'ふめい' => nil}
   open('pokedex.csv', 'rb') do |f|
     f.each_line.with_index do |l, i|
@@ -503,7 +503,7 @@ end
 
 
 def initialize_factory_entries
-  entries = @factory_entries = []
+  entries = $factory_entries = []
   open('factory_data.txt', 'rb') do |f|
     f.each_line.with_index do |l, i|
       row = l.chomp.split('|', -1)[1...-1]
@@ -529,27 +529,37 @@ def effort_text_to_array(text)
 end
 
 def initialize_shuu_entry_range
-  @shuu_pokemons_count = [150, 100, 100, 136, 136, 136, 192] #各周のポケモンの数
-  @shuu_entries_range = []
+  $shuu_pokemons_count = [150, 100, 100, 136, 136, 136, 192] #各周のポケモンの数
+  $shuu_entries_range = []
   i = 0
-  @shuu_pokemons_count.each do |n|
+  $shuu_pokemons_count.each do |n|
     range = i..(i+n-1)
-    @shuu_entries_range << (i..(i+n-1))
+    $shuu_entries_range << (i..(i+n-1))
     i += n
   end
 end
 
+def entry_id_to_shuu(id)
+  return 1 if id < 150
+  return 2 if id < 250
+  return 3 if id < 350
+  return 4 if id < 486
+  return 5 if id < 622
+  return 6 if id < 758
+  return 7
+end
+
 def get_entries_range(shuu)
-  @shuu_entries_range[shuu - 1]
+  $shuu_entries_range[shuu - 1]
 end
 
 def get_shuu_entries_count(shuu)
-  @shuu_pokemons_count[shuu - 1]
+  $shuu_pokemons_count[shuu - 1]
 end
 
 def get_factory_entry(shuu, name)
   get_entries_range(shuu).each do |i|
-    e = @factory_entries[i]
+    e = $factory_entries[i]
     if e.name == name
       return e
     end
@@ -559,7 +569,7 @@ end
 
 def get_factory_entry_by_regexp(shuu, re)
   get_entries_range(shuu).each do |i|
-    e = @factory_entries[i]
+    e = $factory_entries[i]
     if re =~ e.name
       return e
     end
@@ -569,13 +579,13 @@ end
 
 def initialize_trainer_names
   open('trainer.txt', 'rb') do |f|
-    @trainer_names = f.lines.map(&:chomp)
+    $trainer_names = f.lines.map(&:chomp)
   end
 end
 
 def get_trainer_name(name)
   re = /\A#{roma2reg(name)}\z/
-  @trainer_names.each do |line|
+  $trainer_names.each do |line|
     name = line.match(/の([^の]+)$/)[1]
     if re =~ name
       return line
@@ -585,12 +595,12 @@ def get_trainer_name(name)
 end
 
 def initialize_entei
-  @johto_roads = (29..39).to_a + (42..46).to_a
-  @kanto_roads = (1..22).to_a + [24,26,28]
+  $johto_roads = (29..39).to_a + (42..46).to_a
+  $kanto_roads = (1..22).to_a + [24,26,28]
 end
 
 def valid_roads(roads)
-  roads.all? {|road| @johto_roads.include?(road) or @kanto_roads.include?(road) }
+  roads.all? {|road| $johto_roads.include?(road) or $kanto_roads.include?(road) }
 end
 
 # セーブ前とロード直後の徘徊の位置と狙った初期seedの上位16ビットを受け取り
@@ -617,7 +627,7 @@ def get_roads_by_seed(seed, roads_on_save)
   result = []
   c = 0
   roads_on_save.each do |road_on_save|
-    roads = @johto_roads.include?(road_on_save) ? @johto_roads : @kanto_roads
+    roads = $johto_roads.include?(road_on_save) ? $johto_roads : $kanto_roads
     begin
       seed = step_seed(seed)
       road = roads[(seed >> 16) % roads.size]

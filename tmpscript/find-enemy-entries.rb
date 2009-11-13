@@ -23,7 +23,7 @@ def show_entries(shuu, h, visited_entries)
            info[:parent_id],
            info[:secret_id],
            pid,
-           @natures[pid % 25],
+           $natures[pid % 25],
            entry.pokemon_entry.ability(pid % 2),
            pid2gender(pid, entry.pokemon_entry))
   end

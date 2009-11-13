@@ -18,7 +18,7 @@ def is_match(n, s)
 end
 
 def trainer_name_to_id(search_name)
-  @trainer_names.find_index do |line|
+  $trainer_names.find_index do |line|
     name = line.match(/の([^の]+)$/)[1]
     name == search_name
   end

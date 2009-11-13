@@ -77,8 +77,8 @@ def main_cycle(shuu, date, seed_high, roads, roads_on_save)
     puts "並び順が一致しません"
     return true
   end
-  seed = step_seed(seed, @consumption_for_calc_order)
-  consumption += @consumption_for_calc_order
+  seed = step_seed(seed, $consumption_for_calc_order)
+  consumption += $consumption_for_calc_order
   
   
   h = enemy_entries_info = get_3_entries_info(shuu, first_seed, seed, consumption, entries)

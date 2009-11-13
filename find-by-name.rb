@@ -27,7 +27,7 @@ if order != create_order(raw_entries, entries)
 end
 
 n = show_entries(shuu, h, consumption, entries, [])
-n += @consumption_for_calc_order
+n += $consumption_for_calc_order
 seed = step_seed(seed, n)
 consumption += n
 
