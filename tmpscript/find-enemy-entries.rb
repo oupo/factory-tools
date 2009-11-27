@@ -55,12 +55,13 @@ prev_enemy_entries = nil
 #print "こちらの手持ち: "
 #entries_in_hand = input_pokemon_names(3, shuu, [])
 entries_in_hand = nil
+prev_entries_in_hand = nil
 
 1.upto(7) do |i|
   if i == 1
     visited_entries = entries
   else
-    visited_entries = entries_in_hand + prev_enemy_entries
+    visited_entries = prev_entries_in_hand + prev_enemy_entries
   end
   begin
     print "#{i}戦目のこちらの手持ち: "
@@ -84,4 +85,5 @@ entries_in_hand = nil
   seed = step_seed(seed, end_consumption + 1 - consumption)
   consumption = end_consumption + 1
   prev_enemy_entries = enemy_entries
+  prev_entries_in_hand = entries_in_hand
 end

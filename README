@@ -17,3 +17,9 @@ tmpscript/utugi.rb: ウツギ博士に電話したときの電話の内容を出
 tmpscript/first-seed.rb: 初期seedを合わせるためのスクリプト（徘徊位置確認、タイマー機能）
 tmpscript/shiny.c: 色違いの出る（はずだった）seedを出力
 tmpscript/gen-factory-data-for-c.rb shiny.cで使う構造体定義の出力
+tmpscript/find-enemy-entries.rb: 7戦分の相手の手持ちの決定に使われる乱数列を探す
+tmpscript/find-entries.rb: 6匹の決定方法が M - 乱数 % N と仮定して当てはまるものを探す
+tmpscript/find-trainers.rb: トレーナーの決定方法が乱数 % N + M と仮定して当てはまるものを探す
+tmpscript/search-seed.c: 6匹の親IDと性格のみからseedを逆算
+tmpscript/show-entry-rand.rb: 6匹の種類決定に使われる乱数列の表示
+tmpscript/show-trainer-rand.rb: トレーナー決定に使われる乱数列の表示

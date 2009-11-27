@@ -11,7 +11,7 @@ def main
 
   begin
     print "seed+消費: "
-  end until /\A(0x[0-9a-f]{8})(?:\+(\d+))?\z/ =~ gets().chomp
+  end until /\A(0x[0-9a-f]{1,8})(?:([+-]\d+))?\z/ =~ gets().chomp
   first_seed = Integer($1)
   consumption = Integer($2 || 0)
 
@@ -259,7 +259,6 @@ end
 
 def get_factory_entries(shuu, seed, count, visited_entries, num_bonus)
   entries = []
-  item_set = entries_to_item_set(visited_entries)
   n = 0
   count.times do |i|
     is_bonus = count - i <= num_bonus
@@ -267,9 +266,7 @@ def get_factory_entries(shuu, seed, count, visited_entries, num_bonus)
     entry = $factory_entries[id]
     seed = step_seed(seed)
     n += 1
-    redo if item_set.include?(entry.item)
-    item_set << entry.item
-    redo if entries.include?(entry) or visited_entries.include?(entry)
+    redo if entries_collision(entry, entries, visited_entries)
     entries << entry
   end
   return entries, n
@@ -277,7 +274,6 @@ end
 
 def show_factory_entries_by_seed(shuu, entries_count, seed, consumption, visited_entries, num_bonus)
   ids = []
-  item_set = entries_to_item_set(visited_entries)
   n = 0
   entries_count.times do |i|
     is_bonus = entries_count - i <= num_bonus
@@ -286,8 +282,7 @@ def show_factory_entries_by_seed(shuu, entries_count, seed, consumption, visited
     range = get_entries_range(entry_shuu)
     id = factory_id_by_seed(entry_shuu, seed)
     e = $factory_entries[id]
-    included = ids.include?(id) || visited_entries.include?(e)
-    item_collision = item_set.include?(e.item)
+    collided = entries_collision(entry, entries, visited_entries)
     puts sprintf("%d: %#.8x %d - %#.4x %% %d%s = %d %s%s",
                  consumption + n,
                  seed,
@@ -297,23 +292,22 @@ def show_factory_entries_by_seed(shuu, entries_count, seed, consumption, visited
                  range.first != 0 ? " + #{range.first}" : '',
                  id + 1,
                  e.name,
-                 included       ? " (重複のため無視)" : 
-                 item_collision ? " (アイテム重複のため無視)": "")
+                 collided ? " (重複のため無視)" : "")
     seed = step_seed(seed)
     n += 1
-    redo if item_collision
-    item_set << e.item
-    redo if included
+    redo if collided
     ids << id
   end
 end
 
-def entries_to_item_set(entries)
-  set = Set.new
-  entries.each do |entry|
-    set << entry.item
+def entries_collision(entry, entries, visited_entries)
+  entries_collision0(entry, entries) || entries_collision0(entry, visited_entries)
+end
+
+def entries_collision0(search_entry, entries)
+  entries.any? do |entry|
+    entry.pokemon_entry == search_entry.pokemon_entry or entry.item == search_entry.item
   end
-  set
 end
 
 def get_entries_pid(entries, seed)
